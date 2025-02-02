@@ -30,6 +30,7 @@ jobs:
             -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
             -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }} \
             --stacktrace
+            --scan
 
     - name: Run Tests
       run: ./gradlew test
