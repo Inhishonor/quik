@@ -24,7 +24,7 @@ jobs:
         java-version: '17'
 
     - name: Build with Gradle
-      run: ./gradlew build /
+      run: ./gradlew build \
             -Pandroid.injected.signing.store.file=${{ github.workspace }}/my-release-key.keystore \
             -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
             -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
