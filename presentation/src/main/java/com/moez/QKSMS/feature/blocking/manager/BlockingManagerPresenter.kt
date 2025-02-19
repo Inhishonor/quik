@@ -29,9 +29,11 @@ class BlockingManagerPresenter @Inject constructor(
     private val navigator: Navigator,
     private val prefs: Preferences,
     private val qksms: QksmsBlockingClient,
+    private val spamBlocker: SpamBlockerClient,
     private val shouldIAnswer: ShouldIAnswerBlockingClient
 ) : QkPresenter<BlockingManagerView, BlockingManagerState>(BlockingManagerState(
         blockingManager = prefs.blockingManager.get(),
+        spamBlockerInstalled = spamBlocker.isAvailable(),
         callBlockerInstalled = callBlocker.isAvailable(),
         callControlInstalled = callControl.isAvailable(),
         siaInstalled = shouldIAnswer.isAvailable()
@@ -72,6 +74,24 @@ class BlockingManagerPresenter @Inject constructor(
                     analytics.setUserProperty("Blocking Manager", "QKSMS")
                     prefs.blockingManager.set(Preferences.BLOCKING_MANAGER_QKSMS)
                 }
+                
+         view.spamBlockerClicked()
+                .filter {
+                    val installed = spamBlocker.isAvailable()
+                    if (!installed) {
+                        analytics.track("Install Spam Blocker")
+                        navigator.installSpamBlocker()
+                    }
+
+                    val enabled = prefs.blockingManager.get() == Preferences.BLOCKING_MANAGER_SB
+                    installed && !enabled
+                }
+                .autoDisposable(view.scope())
+                .subscribe {
+                    analytics.setUserProperty("Blocking Manager", "Spam Blocker")
+                    prefs.blockingManager.set(Preferences.BLOCKING_MANAGER_SB)
+                }
+
 
         view.callBlockerClicked()
                 .filter {
