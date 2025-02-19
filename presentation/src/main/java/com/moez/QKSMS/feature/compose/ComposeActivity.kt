@@ -245,6 +245,17 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
         showBackButton(true)
         viewModel.bindView(this)
 
+        // Check if there is a speech recognition service available
+        val packageManager = packageManager
+        val speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        val resolveInfoList = packageManager.queryIntentActivities(speechRecognizerIntent, PackageManager.MATCH_DEFAULT_ONLY)
+
+        if (resolveInfoList.isEmpty()) {
+        // No STT provider found, show a Toast message
+            Toast.makeText(this, getString(R.string.stt_toast_no_provider), Toast.LENGTH_SHORT).show()
+        }
+
+
         contentView.layoutTransition = LayoutTransition().apply {
             disableTransitionType(LayoutTransition.CHANGING)
         }
@@ -309,6 +320,36 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
                         ACTION_DRAG_ENDED, ACTION_DRAG_EXITED -> {
                             speechToTextFrame.isVisible = true
                         }
+                .doOnNext { loading.setTint(it.theme) }
+                .doOnNext { attach.setBackgroundTint(it.theme) }
+                .doOnNext { attach.setTint(it.textPrimary) }
+                .doOnNext { messageAdapter.theme = it }
+                .autoDisposable(scope())
+                .subscribe()
+
+        message.setOnTouchListener(object : OnTouchListener {
+            private val gestureDetector =
+                GestureDetector(this@ComposeActivity, object : SimpleOnGestureListener() {
+                    private var lastUpEvent: MotionEvent? = null
+
+                    override fun onDoubleTap(e: MotionEvent): Boolean {
+                        // Create the speech recognizer intent
+                        val speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+                            .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                            // Optionally include a prompt message
+                            .putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.stt_toast_extra_prompt))
+
+                        // Check if there is a speech recognition service available
+                        val resolveInfoList = packageManager.queryIntentActivities(speechRecognizerIntent, PackageManager.MATCH_DEFAULT_ONLY)
+
+                        if (resolveInfoList.isEmpty()) {
+                            // No STT provider found, show a Toast message
+                            Toast.makeText(this@ComposeActivity, getString(R.string.stt_toast_no_provider), Toast.LENGTH_SHORT).show()
+                        } else {
+                            // Launch the speech recognizer
+                            speechResultLauncher.launch(speechRecognizerIntent)
+                        }
+                        return true
                     }
                     true
                 }
