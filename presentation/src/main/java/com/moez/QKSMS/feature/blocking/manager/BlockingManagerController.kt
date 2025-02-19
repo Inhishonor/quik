@@ -47,6 +47,7 @@ class BlockingManagerController : QkController<BlockingManagerView, BlockingMana
         val imageTintList = ColorStateList(states, intArrayOf(colors.theme().theme, textTertiary))
 
         qksms.action.imageTintList = imageTintList
+        spamBlocker.action.imageTintList = imageTintList
         callBlocker.action.imageTintList = imageTintList
         callControl.action.imageTintList = imageTintList
         shouldIAnswer.action.imageTintList = imageTintList
@@ -60,7 +61,12 @@ class BlockingManagerController : QkController<BlockingManagerView, BlockingMana
         qksms.action.setImageResource(getActionIcon(true))
         qksms.action.isActivated = true
         qksms.action.isInvisible = state.blockingManager != Preferences.BLOCKING_MANAGER_QKSMS
-
+        
+        spamBlocker.action.setImageResource(getActionIcon(state.spamBlockerInstalled))
+        spamBlocker.action.isActivated = state.spamBlockerInstalled
+        spamBlocker.action.isInvisible = state.blockingManager != Preferences.BLOCKING_MANAGER_SB
+                && state.spamBlockerInstalled
+        
         callBlocker.action.setImageResource(getActionIcon(state.callBlockerInstalled))
         callBlocker.action.isActivated = state.callBlockerInstalled
         callBlocker.action.isInvisible = state.blockingManager != Preferences.BLOCKING_MANAGER_CB
@@ -84,6 +90,7 @@ class BlockingManagerController : QkController<BlockingManagerView, BlockingMana
 
     override fun activityResumed(): Observable<*> = activityResumedSubject
     override fun qksmsClicked(): Observable<*> = qksms.clicks()
+    override fun spamBlockerClicked(): Observable<*> = spamBlocker.clicks()
     override fun callBlockerClicked(): Observable<*> = callBlocker.clicks()
     override fun callControlClicked(): Observable<*> = callControl.clicks()
     override fun siaClicked(): Observable<*> = shouldIAnswer.clicks()
