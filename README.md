@@ -1,7 +1,4 @@
-![QKSMS](https://user-images.githubusercontent.com/4358785/39079306-a5a409b6-44e5-11e8-8589-b4acd63b636e.jpg)
-
-> **Note**
-This image is outdated! Nothing has changed as far as UI, so it should be okay for now.
+![octoshrimpy/QUIK](.github/octoshrimpy_quik.jpg)
 
 # QUIK
 
@@ -33,11 +30,8 @@ When reporting a bug, please make sure to provide the following information:
 - QUIK version
 - Device / OS information
 
-<!--
-## Translations
-
-If you'd like to add translations to QUIK, please join the project on [Crowdin](https://crowdin.com/project/qksms). Translations that are committed directly to source files will not be accepted.
--->
+## Contributing
+Contributions welcome! Please see the [contributing guidelines](https://github.com/octoshrimpy/quik/blob/master/CONTRIBUTING.md) for details.
 
 ## Thank you
 

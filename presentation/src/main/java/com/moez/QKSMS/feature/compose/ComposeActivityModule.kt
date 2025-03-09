@@ -21,15 +21,12 @@ package dev.octoshrimpy.quik.feature.compose
 import android.content.Intent
 import android.net.Uri
 import androidx.lifecycle.ViewModel
-import com.google.android.mms.ContentType
 import dev.octoshrimpy.quik.injection.ViewModelKey
 import dev.octoshrimpy.quik.model.Attachment
-import dev.octoshrimpy.quik.model.Attachments
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
 import java.net.URLDecoder
-import java.nio.charset.Charset
 import javax.inject.Named
 
 @Module
@@ -74,19 +71,34 @@ class ComposeActivityModule {
 
     @Provides
     @Named("attachments")
-    fun provideSharedAttachments(activity: ComposeActivity): Attachments {
+    fun provideSharedAttachments(activity: ComposeActivity): List<Attachment> {
         val uris = mutableListOf<Uri>()
         activity.intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)?.run(uris::add)
         activity.intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)?.run(uris::addAll)
 
-        return Attachments(uris.mapNotNull { Attachment(it) })
+        return uris.mapNotNull { Attachment(activity, it) }
     }
 
     @Provides
     @Named("mode")
-    fun provideSharedAction(activity: ComposeActivity): String {
-        return activity.intent.getStringExtra("mode") ?: "";
-    }
+    fun provideSharedAction(activity: ComposeActivity): String =
+        activity.intent.getStringExtra("mode") ?: ""
+
+    @Provides
+    @Named("subscriptionId")
+    fun provideSubscriptionId(activity: ComposeActivity): Int =
+        activity.intent.getIntExtra("subscriptionId", -1)
+
+    @Provides
+    @Named("sendAsGroup")
+    fun provideSendAsGroup(activity: ComposeActivity): Boolean? =
+        if (!activity.intent.hasExtra("sendAsGroup")) null
+        else activity.intent.getBooleanExtra("sendAsGroup", false)
+
+    @Provides
+    @Named("scheduleDateTime")
+    fun provideSharedScheduleDateTime(activity: ComposeActivity): Long =
+        activity.intent.getLongExtra("scheduleDateTime", 0L)
 
     @Provides
     @IntoMap
