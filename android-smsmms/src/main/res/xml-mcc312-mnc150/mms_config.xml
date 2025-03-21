@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mms_config version="1">
-    <bool name="smsUsesSimpleCharactersOnly">true</bool>
+    <string name="httpParams">X-MDN: ##LINE1##</string>
 </mms_config>
