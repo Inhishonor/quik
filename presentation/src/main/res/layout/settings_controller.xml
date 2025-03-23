@@ -237,6 +237,15 @@
             android:background="?android:attr/divider" />
 
         <dev.octoshrimpy.quik.common.widget.PreferenceView
+                android:id="@+id/disableScreenshots"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+            app:icon=""
+            app:summary=""
+            app:title="@string/settings_disable_screenshots_title"
+            app:widget="" />
+
+        <dev.octoshrimpy.quik.common.widget.PreferenceView
             android:id="@+id/sync"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
