@@ -361,9 +361,6 @@
 
     <string name="blocked_messages_title">Blocked messages</string>
     <string name="blocked_messages_empty">Your blocked messages will appear here</string>
-    <string name="blocked_notification_success">Number was blocked successfully</string>
-    <string name="blocked_notification_error">Sorry, there was an error blocking the number</string>
-
 
     <string name="blocking_block_title">Block</string>
     <string name="blocking_unblock_title">Unblock</string>
