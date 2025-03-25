@@ -131,7 +131,7 @@ class MainActivity : QkThemedActivity(), MainView {
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
-        disableScreenshots()
+        disableScreenshots(prefs.disableScreenshots.get())
         setContentView(R.layout.main_activity)
         viewModel.bindView(this)
         onNewIntentIntent.onNext(intent)
@@ -339,7 +339,7 @@ class MainActivity : QkThemedActivity(), MainView {
     override fun onResume() {
         super.onResume()
         activityResumedIntent.onNext(true)
-        disableScreenshots()
+        disableScreenshots(prefs.disableScreenshots.get())
     }
 
     override fun onPause() {

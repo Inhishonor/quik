@@ -155,6 +155,7 @@ class SettingsPresenter @Inject constructor(
             }
         disposables += prefs.disableScreenshots.asObservable()
             .subscribe { enabled -> newState { copy(disableScreenshotsEnabled = enabled) } }
+
         disposables += syncRepo.syncProgress
                 .sample(16, TimeUnit.MILLISECONDS)
                 .distinctUntilChanged()

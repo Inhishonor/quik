@@ -203,7 +203,7 @@ class SettingsController : QkController<SettingsView, SettingsState, SettingsPre
         messsageLinkHandling.summary = state.messageLinkHandlingSummary
         messageLinkHandlingDialog.adapter.selectedItem = state.messageLinkHandlingId
 
-        // disableScreenshots.checkbox.isChecked = state.disableScreenshotEnabled
+        disableScreenshots.checkbox.isChecked = state.disableScreenshotsEnabled
 
         when (state.syncProgress) {
             is SyncRepository.SyncProgress.Idle -> syncingProgress.isVisible = false
