@@ -124,6 +124,7 @@ import kotlinx.android.synthetic.main.compose_activity.scheduleLabel
 import kotlinx.android.synthetic.main.compose_activity.scheduledCancel
 import kotlinx.android.synthetic.main.compose_activity.scheduledGroup
 import kotlinx.android.synthetic.main.compose_activity.scheduledTime
+import kotlinx.android.synthetic.main.compose_activity.scheduledSend
 import kotlinx.android.synthetic.main.compose_activity.send
 import kotlinx.android.synthetic.main.compose_activity.sendAsGroup
 import kotlinx.android.synthetic.main.compose_activity.sendAsGroupBackground
@@ -533,8 +534,9 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
         simIndex.text = state.subscription?.simSlotIndex?.plus(1)?.toString()
 
         // show either send or audio msg record button
-        send.visibility = if (state.canSend && !state.loading) View.VISIBLE else View.INVISIBLE
+        send.visibility = if (state.canSend && !state.loading && state.scheduled == 0L) View.VISIBLE else View.INVISIBLE
         recordAudioMsg.visibility = if (state.canSend && !state.loading) View.INVISIBLE else View.VISIBLE
+        scheduledSend.visibility = if (state.canSend && (state.scheduled != 0L) && !state.loading) View.VISIBLE else View.INVISIBLE
 
         // if not in editing mode, and there are no non-me participants that can be sent to,
         // hide controls that allow constructing a reply and inform user no valid recipients
@@ -561,6 +563,7 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
         // if scheduling mode is set, show schedule dialog
         if (state.scheduling)
             scheduleAction.onNext(true)
+
 
         // if stt is available and preference is set to show stt button
         if (isSpeechRecognitionAvailable() && prefs.showStt.get()) {
