@@ -44,17 +44,9 @@ interface MessageRepository {
 
     fun savePart(id: Long): Uri?
 
-    /**
-     * Retrieves the list of messages which should be shown in the notification
-     * for a given conversation
-     */
-    fun getUnreadUnseenMessages(threadId: Long): RealmResults<Message>
+    fun getUnreadUnseenMessagesForConversation(threadId: Long): RealmResults<Message>
 
-    /**
-     * Retrieves the list of messages which should be shown in the quickreply popup
-     * for a given conversation
-     */
-    fun getUnreadMessages(threadId: Long): RealmResults<Message>
+    fun getUnreadMessagesForConversation(threadId: Long): RealmResults<Message>
 
     fun markAllSeen(): Int
 

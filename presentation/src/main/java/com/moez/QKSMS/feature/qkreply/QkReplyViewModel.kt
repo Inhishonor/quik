@@ -65,7 +65,7 @@ class QkReplyViewModel @Inject constructor(
     }
 
     private val messages: Subject<RealmResults<Message>> =
-            BehaviorSubject.createDefault(messageRepo.getUnreadMessages(threadId))
+            BehaviorSubject.createDefault(messageRepo.getUnreadMessagesForConversation(threadId))
 
     init {
         disposables += markRead
@@ -141,7 +141,7 @@ class QkReplyViewModel @Inject constructor(
         // Show unread messages only
         view.menuItemIntent
                 .filter { id -> id == R.id.collapse }
-                .map { messageRepo.getUnreadMessages(threadId) }
+                .map { messageRepo.getUnreadMessagesForConversation(threadId) }
                 .doOnNext(messages::onNext)
                 .autoDisposable(view.scope())
                 .subscribe { newState { copy(expanded = false) } }
@@ -150,7 +150,7 @@ class QkReplyViewModel @Inject constructor(
         view.menuItemIntent
                 .filter { id -> id == R.id.delete }
                 .observeOn(Schedulers.io())
-                .map { messageRepo.getUnreadMessages(threadId).map { it.id } }
+                .map { messageRepo.getUnreadMessagesForConversation(threadId).map { it.id } }
                 .map { messages -> DeleteMessages.Params(messages, threadId) }
                 .autoDisposable(view.scope())
                 .subscribe { deleteMessages.execute(it) { newState { copy(hasError = true) } } }

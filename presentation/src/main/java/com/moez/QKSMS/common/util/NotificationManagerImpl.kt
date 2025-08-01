@@ -106,7 +106,7 @@ class NotificationManagerImpl @Inject constructor(
             return
         }
 
-        val messages = messageRepo.getUnreadUnseenMessages(threadId)
+        val messages = messageRepo.getUnreadUnseenMessagesForConversation(threadId)
 
         // If there are no messages to be displayed, make sure that the notification is dismissed
         if (messages.isEmpty()) {

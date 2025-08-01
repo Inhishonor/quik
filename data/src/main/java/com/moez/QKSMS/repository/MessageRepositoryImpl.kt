@@ -224,7 +224,7 @@ open class MessageRepositoryImpl @Inject constructor(
         return uri
     }
 
-    override fun getUnreadUnseenMessages(threadId: Long): RealmResults<Message> =
+    override fun getUnreadUnseenMessagesForConversation(threadId: Long): RealmResults<Message> =
         Realm.getDefaultInstance()
             .also { it.refresh() }
             .where(Message::class.java)
@@ -234,7 +234,7 @@ open class MessageRepositoryImpl @Inject constructor(
             .sort("date")
             .findAll()
 
-    override fun getUnreadMessages(threadId: Long): RealmResults<Message> =
+    override fun getUnreadMessagesForConversation(threadId: Long): RealmResults<Message> =
         Realm.getDefaultInstance()
             .where(Message::class.java)
             .equalTo("read", false)
