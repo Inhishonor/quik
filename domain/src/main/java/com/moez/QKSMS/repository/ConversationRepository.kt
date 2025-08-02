@@ -36,6 +36,8 @@ interface ConversationRepository {
      */
     fun getTopConversations(): List<Conversation>
 
+    fun getAllUnreadConversationsSnapshot(): List<Conversation>
+
     fun setConversationName(id: Long, name: String): Completable
 
     fun searchConversations(query: CharSequence): List<SearchResult>

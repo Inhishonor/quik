@@ -42,6 +42,7 @@ import dev.octoshrimpy.quik.feature.settings.SettingsController
 import dev.octoshrimpy.quik.feature.settings.about.AboutController
 import dev.octoshrimpy.quik.feature.settings.swipe.SwipeActionsController
 import dev.octoshrimpy.quik.feature.themepicker.injection.ThemePickerComponent
+import dev.octoshrimpy.quik.feature.widget.UnreadWidgetAdapter
 import dev.octoshrimpy.quik.feature.widget.WidgetAdapter
 import dev.octoshrimpy.quik.injection.android.ActivityBuilderModule
 import dev.octoshrimpy.quik.injection.android.BroadcastReceiverBuilderModule
@@ -75,6 +76,7 @@ interface AppComponent {
     fun inject(dialog: QkDialog)
 
     fun inject(service: WidgetAdapter)
+    fun inject(service: UnreadWidgetAdapter)
 
     /**
      * This can't use AndroidInjection, or else it will crash on pre-marshmallow devices

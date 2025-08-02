@@ -133,6 +133,27 @@ class ConversationRepositoryImpl @Inject constructor(
                 )
         }
 
+    override fun getAllUnreadConversationsSnapshot(): List<Conversation> {
+        val sortOrder: MutableList<String> = arrayListOf("pinned", "draft", "lastMessage.date")
+        val sortDirections: MutableList<Sort> = arrayListOf(Sort.DESCENDING, Sort.DESCENDING, Sort.DESCENDING)
+
+        return Realm.getDefaultInstance().use { realm ->
+            realm.refresh()
+            realm.where(Conversation::class.java)
+                .notEqualTo("id", 0L)
+                .equalTo("archived", false)
+                .equalTo("blocked", false)
+                .isNotEmpty("recipients")
+                .beginGroup()
+                .isNotNull("lastMessage")
+                .equalTo("lastMessage.read", false)
+                .endGroup()
+                .sort(sortOrder.toTypedArray(), sortDirections.toTypedArray())
+                .findAll()
+                .let(realm::copyFromRealm)
+        }
+    }
+
         override fun setConversationName(id: Long, name: String) =
             Completable.fromAction {
                 Realm.getDefaultInstance().use { realm ->

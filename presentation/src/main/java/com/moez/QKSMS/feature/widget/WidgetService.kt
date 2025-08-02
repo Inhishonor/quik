@@ -24,8 +24,8 @@ import android.widget.RemoteViewsService
 
 class WidgetService : RemoteViewsService() {
 
-    override fun onGetViewFactory(intent: Intent): RemoteViewsService.RemoteViewsFactory {
-        return WidgetAdapter(intent)
+    override fun onGetViewFactory(intent: Intent): RemoteViewsFactory {
+        val isUnreadWidget = intent.getBooleanExtra("unread_widget", false)
+        return if (isUnreadWidget) UnreadWidgetAdapter(intent) else WidgetAdapter(intent)
     }
-
 }

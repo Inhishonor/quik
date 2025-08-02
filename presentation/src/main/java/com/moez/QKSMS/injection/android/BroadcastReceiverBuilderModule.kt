@@ -20,6 +20,7 @@ package dev.octoshrimpy.quik.injection.android
 
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
+import dev.octoshrimpy.quik.feature.widget.UnreadWidgetProvider
 import dev.octoshrimpy.quik.feature.widget.WidgetProvider
 import dev.octoshrimpy.quik.injection.scope.ActivityScope
 import dev.octoshrimpy.quik.receiver.BlockThreadReceiver
@@ -129,5 +130,9 @@ abstract class BroadcastReceiverBuilderModule {
     @ActivityScope
     @ContributesAndroidInjector()
     abstract fun bindWidgetProvider(): WidgetProvider
+
+    @ActivityScope
+    @ContributesAndroidInjector()
+    abstract fun bindUnreadWidgetProvider(): UnreadWidgetProvider
 
 }
