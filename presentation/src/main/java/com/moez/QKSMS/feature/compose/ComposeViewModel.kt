@@ -279,10 +279,15 @@ class ComposeViewModel @Inject constructor(
             }
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { liveResults ->
-                val hasAny = liveResults.isNotEmpty()
-                newState { copy(hasScheduledMessages = hasAny) }
+                val hasAnyScheduledMessages = liveResults.isNotEmpty()
+                val scheduledMessageCount = liveResults.size
+                newState {
+                    copy(
+                        hasScheduledMessages = hasAnyScheduledMessages,
+                        scheduledMessageCount = scheduledMessageCount
+                    )
+                }
             }
-
         // actions
         if (mode == "scheduling")
             newState { copy(scheduling = true) }

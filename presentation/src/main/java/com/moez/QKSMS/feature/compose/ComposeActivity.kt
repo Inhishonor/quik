@@ -46,6 +46,7 @@ import android.view.View
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -53,6 +54,8 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.material.badge.BadgeDrawable
+import com.google.android.material.badge.BadgeUtils
 import com.google.android.material.snackbar.Snackbar
 import com.jakewharton.rxbinding2.view.clicks
 import com.jakewharton.rxbinding2.widget.textChanges
@@ -443,8 +446,11 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
         seekBarUpdater?.dispose()
     }
 
-
+    @com.google.android.material.badge.ExperimentalBadgeUtils
     override fun render(state: ComposeState) {
+        // Workaround for scheduled message badge until the whole app has been migrated to material theming
+        val materialContext = ContextThemeWrapper(this, com.google.android.material.R.style.Theme_MaterialComponents)
+
         if (state.hasError) {
             finish()
             return
@@ -565,6 +571,23 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
         // if scheduling mode is set, show schedule dialog
         if (state.scheduling)
             scheduleAction.onNext(true)
+
+        val scheduledMessagesItem = toolbar.menu.findItem(R.id.viewScheduledMessages)
+        val scheduledBadge = BadgeDrawable.create(materialContext).apply {
+            number = state.scheduledMessageCount
+            backgroundColor = theme.blockingFirst().theme
+        }
+        if (scheduledMessagesItem != null) {
+            if (state.hasScheduledMessages) {
+                BadgeUtils.attachBadgeDrawable(scheduledBadge, toolbar, scheduledMessagesItem.itemId)
+            } else {
+                // Right now the drawable jumps to another menu item. TODO: Fix it!
+                // https://stackoverflow.com/questions/65597372/livedata-update-of-badgedrawable-in-toolbar-menuitem
+                // Prepare options menu however prevents the toolbar from working
+                BadgeUtils.detachBadgeDrawable(scheduledBadge, toolbar, scheduledMessagesItem.itemId)
+            }
+        }
+
 
         // if stt is available and preference is set to show stt button
         if (isSpeechRecognitionAvailable() && prefs.showStt.get()) {
