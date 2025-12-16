@@ -37,6 +37,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import io.realm.Realm
 import io.realm.RealmResults
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -74,11 +75,14 @@ class ContactRepositoryImpl @Inject constructor(
     }
 
     override fun getUnmanagedContact(lookupKey: String): Contact? {
+        Timber.d( "Fetching contact with lookupKey: $lookupKey")
         return Realm.getDefaultInstance().use { realm ->
             realm.where(Contact::class.java)
                     .equalTo("lookupKey", lookupKey)
                     .findFirst()
-                    ?.let(realm::copyFromRealm)
+                    ?.let(
+                        realm::copyFromRealm
+                    )
         }
     }
 
@@ -88,7 +92,10 @@ class ContactRepositoryImpl @Inject constructor(
         return realm
             .where(Contact::class.java)
             .findAll()
-            .map { realm.copyFromRealm(it) }
+            .map {
+                Timber.d( "Contact found: $it")
+                realm.copyFromRealm(it)
+            }
     }
 
     override fun getUnmanagedContacts(starred: Boolean): Observable<List<Contact>> {
@@ -96,6 +103,7 @@ class ContactRepositoryImpl @Inject constructor(
 
         val mobileOnly = prefs.mobileOnly.get()
         val mobileLabel by lazy { Phone.getTypeLabel(context.resources, Phone.TYPE_MOBILE, "Mobile").toString() }
+        Timber.d("Mobile Label: %s", mobileLabel)
 
         var query = realm.where(Contact::class.java)
 
@@ -118,12 +126,15 @@ class ContactRepositoryImpl @Inject constructor(
                 .map { contacts ->
                     if (mobileOnly) {
                         contacts.map { contact ->
+                            Timber.d("Contacts (from mobileOnly): $contacts")
                             val filteredNumbers = contact.numbers.filter { number -> number.type == mobileLabel }
+                            Timber.d("Filtered Contact Numbers: $filteredNumbers")
                             contact.numbers.clear()
                             contact.numbers.addAll(filteredNumbers)
                             contact
                         }
                     } else {
+                        Timber.d("Contacts (from not mobileOnly): $contacts")
                         contacts
                     }
                 }

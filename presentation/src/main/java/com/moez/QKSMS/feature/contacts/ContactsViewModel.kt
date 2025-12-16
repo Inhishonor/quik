@@ -44,6 +44,7 @@ import io.reactivex.schedulers.Schedulers
 import io.realm.RealmList
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.rx2.awaitFirst
+import timber.log.Timber
 import javax.inject.Inject
 
 class ContactsViewModel @Inject constructor(
@@ -68,6 +69,7 @@ class ContactsViewModel @Inject constructor(
             .observeOn(Schedulers.io())
             .map { hashmap ->
                 hashmap.map { (address, lookupKey) ->
+                    Timber.d("Address: %s and lookupKey: %s",  address, lookupKey)
                     Recipient(address = address, contact = lookupKey?.let(contactsRepo::getUnmanagedContact))
                 }
             }
@@ -85,7 +87,10 @@ class ContactsViewModel @Inject constructor(
         // Update the state's query, so we know if we should show the cancel button
         view.queryChangedIntent
                 .autoDisposable(view.scope())
-                .subscribe { query -> newState { copy(query = query.toString()) } }
+                .subscribe { query ->
+                    Timber.d("Contact Query: %s", query.toString())
+                    newState { copy(query = query.toString()) }
+                }
 
         // Clear the query
         view.queryClearedIntent
@@ -113,7 +118,6 @@ class ContactsViewModel @Inject constructor(
                                     }
                                 }
                                 .map(ComposeItem::Recent)
-
                         composeItems += starredContacts
                                 .filter { contact -> selectedChips.none { it.contact?.lookupKey == contact.lookupKey } }
                                 .map(ComposeItem::Starred)
@@ -167,7 +171,10 @@ class ContactsViewModel @Inject constructor(
                 }
                 .subscribeOn(Schedulers.computation())
                 .autoDisposable(view.scope())
-                .subscribe { items -> newState { copy(composeItems = items) } }
+                .subscribe { items ->
+                    newState { copy(composeItems = items) }
+                    Timber.d("Compose Items: %s", items)
+                }
 
         // Listen for ComposeItems being selected, and then send them off to the number picker dialog in case
         // the user needs to select a phone number
