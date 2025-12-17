@@ -121,8 +121,6 @@ class ContactRepositoryImpl @Inject constructor(
                 .filter { it.isLoaded }
                 .filter { it.isValid }
                 .map { realm.copyFromRealm(it) }
-                .subscribeOn(AndroidSchedulers.mainThread())
-                .observeOn(Schedulers.io())
                 .map { contacts ->
                     if (mobileOnly) {
                         contacts.map { contact ->
@@ -151,6 +149,7 @@ class ContactRepositoryImpl @Inject constructor(
                         }
                     }
                 }
+                .subscribeOn(Schedulers.io())
     }
 
     override fun getUnmanagedContactGroups(): Observable<List<ContactGroup>> {
