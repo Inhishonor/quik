@@ -45,14 +45,8 @@ class PhoneNumberUtils @Inject constructor(context: Context) {
             return true
         }
 
-        if (PhoneNumberUtils.compare(first, second)) {
-            val matchType = phoneNumberUtil.isNumberMatch(normalizedFirst, normalizedSecond)
-            if (matchType >= PhoneNumberUtil.MatchType.SHORT_NSN_MATCH) {
-                return true
-            }
-        }
-
-        return false
+        val matchType = phoneNumberUtil.isNumberMatch(normalizedFirst, normalizedSecond)
+        return matchType >= PhoneNumberUtil.MatchType.SHORT_NSN_MATCH
     }
 
     fun isPossibleNumber(number: CharSequence): Boolean {
