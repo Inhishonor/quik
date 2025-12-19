@@ -44,6 +44,7 @@ import io.realm.Realm
 import io.realm.RealmQuery
 import io.realm.RealmResults
 import io.realm.Sort
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -339,7 +340,7 @@ class ConversationRepositoryImpl @Inject constructor(
     override fun createConversation(addresses: Collection<String>, sendAsGroup: Boolean): Conversation? {
         val providerThreadId = TelephonyCompat.getOrCreateThreadId(context, addresses.toSet())
             .takeIf { it != 0L } ?: return null
-
+        Timber.d("ProviderThreadId: " + providerThreadId)
         return createConversationFromCp(providerThreadId, sendAsGroup)
     }
 
@@ -529,6 +530,8 @@ class ConversationRepositoryImpl @Inject constructor(
                                 .sort("date", Sort.DESCENDING)
                                 .findFirst()
                         }
+                        Timber.d("Conversation: " + conversation)
+                        Timber.d("Conversation Recipients: " + conversation.recipients)
 
                         realm.executeTransaction { it.insertOrUpdate(conversation) }
                         realm.copyFromRealm(conversation)
