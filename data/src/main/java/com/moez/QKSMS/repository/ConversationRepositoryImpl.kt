@@ -336,10 +336,12 @@ class ConversationRepositoryImpl @Inject constructor(
                 ?.let { realm.copyFromRealm(it) }
         }
 
-    override fun createConversation(addresses: Collection<String>, sendAsGroup: Boolean) =
-        TelephonyCompat.getOrCreateThreadId(context, addresses.toSet())
-            .takeIf { it != 0L }
-            ?.let { providerThreadId -> createConversationFromCp(providerThreadId, sendAsGroup) }
+    override fun createConversation(addresses: Collection<String>, sendAsGroup: Boolean): Conversation? {
+        val providerThreadId = TelephonyCompat.getOrCreateThreadId(context, addresses.toSet())
+            .takeIf { it != 0L } ?: return null
+
+        return createConversationFromCp(providerThreadId, sendAsGroup)
+    }
 
     override fun getOrCreateConversation(threadId: Long, sendAsGroup: Boolean) =
         getConversation(threadId) ?: createConversation(threadId, sendAsGroup)
@@ -529,6 +531,7 @@ class ConversationRepositoryImpl @Inject constructor(
                         }
 
                         realm.executeTransaction { it.insertOrUpdate(conversation) }
+                        realm.copyFromRealm(conversation)
                     }
                 }
         }
