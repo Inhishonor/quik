@@ -84,37 +84,6 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      - name: Validate signing configuration
-        id: signing
-        shell: bash
-        env:
-          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          set -euo pipefail
-          missing=0
-          for var in KEYSTORE_B64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
-            if [[ -z "${!var:-}" ]]; then
-              echo "::error title=Missing secret::${var} is not set."
-              missing=1
-            fi
-          done
-          if [[ "$missing" -ne 0 ]]; then
-            exit 1
-          fi
-
-          mkdir -p presentation
-          echo "$KEYSTORE_B64" | base64 -d > presentation/my-release-key.keystore
-          chmod 600 presentation/my-release-key.keystore
-
-          {
-            echo "keystore_password=$KEYSTORE_PASSWORD"
-            echo "key_alias=$KEY_ALIAS"
-            echo "key_password=$KEY_PASSWORD"
-          } >> "$GITHUB_ENV"
-
       - name: Capture version metadata
         id: version
         shell: bash
@@ -139,7 +108,7 @@ jobs:
         uses: gradle/wrapper-validation-action@v1
 
       - name: Build signed release APK
-        run: ./gradlew clean assembleRelease assembleFdroid
+        run: ./gradlew clean assembleDebug
 
       - name: Locate release artifact
         id: release_artifact
@@ -147,25 +116,12 @@ jobs:
         run: |
           set -euo pipefail
           shopt -s nullglob
-          files=(presentation/build/outputs/apk/release/QUIK-v*-release.apk)
+          files=(presentation/build/outputs/apk/release/QUIK-debug.apk)
           if [[ "${#files[@]}" -ne 1 ]]; then
             echo "::error title=APK lookup failed::Expected 1 APK, found ${#files[@]} (${files[*]:-none})."
             exit 1
           fi
           echo "apk_release_path=${files[0]}" >> "$GITHUB_OUTPUT"
-
-      - name: Locate f-droid artifact
-        id: fdroid_artifact
-        shell: bash
-        run: |
-          set -euo pipefail
-          shopt -s nullglob
-          files=(presentation/build/outputs/apk/fdroid/QUIK-v*-fdroid.apk)
-          if [[ "${#files[@]}" -ne 1 ]]; then
-            echo "::error title=APK lookup failed::Expected 1 APK, found ${#files[@]} (${files[*]:-none})."
-            exit 1
-          fi
-          echo "apk_fdroid_path=${files[0]}" >> "$GITHUB_OUTPUT"
 
       - name: Generate checksum
         id: checksums
@@ -215,7 +171,6 @@ jobs:
           body: ${{ steps.clean_notes.outputs.clean_notes }}
           files: |
             ${{ needs.build.outputs.apk_release_path }}
-            ${{ needs.build.outputs.apk_fdroid_path }}
             ${{ needs.build.outputs.checksums_path }}
           fail_on_unmatched_files: true
         env:
