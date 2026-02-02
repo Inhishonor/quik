@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025
+ * Copyright (C) 2025-2026
  *
  * This file is part of QUIK.
  *
@@ -20,6 +20,7 @@ package dev.octoshrimpy.quik.repository
 
 import android.content.Context
 import com.squareup.moshi.Moshi
+import dev.octoshrimpy.quik.compat.SubscriptionManagerCompat
 import dev.octoshrimpy.quik.manager.KeyManager
 import dev.octoshrimpy.quik.model.EmojiReaction
 import dev.octoshrimpy.quik.model.Message
@@ -33,6 +34,7 @@ class EmojiReactionRepositoryImpl @Inject constructor(
     private val context: Context,
     private val keyManager: KeyManager,
     private val moshi: Moshi,
+    private val subscriptionManager: SubscriptionManagerCompat,
 ) : EmojiReactionRepository {
     companion object {
         /**
@@ -370,6 +372,100 @@ class EmojiReactionRepositoryImpl @Inject constructor(
 
         val endTime = System.currentTimeMillis()
         Timber.d("Deleted and reparsed all emoji reactions in ${endTime - startTime}ms")
+    }
+
+    override fun formatReactionSms(emoji: String, targetMessageText: String, isRemoval: Boolean): String {
+        return if (isRemoval) {
+            "\u200aRemoved \u200c$emoji\u200c from \u201C\u200a$targetMessageText\u200a\u201D\u200a"
+        } else {
+            "\u200a\u200b$emoji\u200b to \u201C\u200a$targetMessageText\u200a\u201D\u200a"
+        }
+    }
+
+    private fun getUserNumber(subId: Int): String {
+        val subscriptions = subscriptionManager.activeSubscriptionInfoList
+        Timber.d("Looking for subscription $subId. Available subscriptions: ${subscriptions.map { "id=${it.subscriptionId}, number=${it.number}" }}")
+
+        return subscriptions
+            .firstOrNull { it.subscriptionId == subId }
+            ?.number ?: ""
+    }
+
+    override fun saveOutgoingReaction(
+        subId: Int,
+        reactionMessageId: Long,
+        targetMessage: Message,
+        emoji: String,
+        threadId: Long
+    ) {
+        val userNumber = getUserNumber(subId)
+
+        val realm = Realm.getDefaultInstance()
+        realm.executeTransaction { transactionRealm ->
+            // Always mark the SMS message as an emoji reaction so it doesn't show as regular SMS
+            val reactionMessage = transactionRealm.where(Message::class.java)
+                .equalTo("id", reactionMessageId)
+                .findFirst()
+
+            reactionMessage?.let {
+                it.isEmojiReaction = true
+                transactionRealm.insertOrUpdate(it)
+            }
+            if (userNumber.isEmpty()) {
+                Timber.w("UserNumber returned null, continuing.")
+            }
+
+            val reaction = EmojiReaction().apply {
+                id = keyManager.newId()
+                this.reactionMessageId = reactionMessageId
+                senderAddress = userNumber
+                this.emoji = emoji
+                originalMessageText = targetMessage.getText(false)
+                this.threadId = threadId
+                this.fromMe = true
+
+            }
+
+            transactionRealm.insertOrUpdate(reaction)
+
+            // Overwrite any previous reaction from this sender for this target
+            val priorFromSender =
+                targetMessage.emojiReactions.filter { it.senderAddress == userNumber }
+            priorFromSender.forEach { it.deleteFromRealm() }
+
+            targetMessage.emojiReactions.add(reaction)
+
+            Timber.i("Saved outgoing emoji reaction: $emoji to message ${targetMessage.id}")
+        }
+        realm.close()
+    }
+
+    override fun removeOutgoingReaction(
+        subId: Int,
+        targetMessage: Message,
+        emoji: String
+    ) {
+        val userNumber = getUserNumber(subId)
+        if (userNumber.isEmpty()) {
+            Timber.w("Unable to get user's phone number for subId $subId")
+        }
+
+        val realm = Realm.getDefaultInstance()
+        realm.executeTransaction { _ ->
+            val existingReaction = findReactionsForMessage(targetMessage, emoji)
+            if (existingReaction != null) {
+                existingReaction.deleteFromRealm()
+                Timber.d("Removed outgoing emoji reaction: $emoji from message ${targetMessage.id}")
+            } else {
+                Timber.w("No existing outgoing emoji reaction found to remove: $emoji from message ${targetMessage.id}")
+            }
+        }
+        realm.close()
+    }
+
+    override fun findReactionsForMessage(targetMessage: Message, emoji: String): EmojiReaction? {
+        return targetMessage.emojiReactions
+            .firstOrNull { it.fromMe && it.emoji == emoji }
     }
 
 }

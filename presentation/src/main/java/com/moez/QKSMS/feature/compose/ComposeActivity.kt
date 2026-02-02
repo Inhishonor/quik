@@ -54,7 +54,6 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import com.google.android.flexbox.FlexboxLayoutManager
-import com.google.android.material.snackbar.Snackbar
 import com.jakewharton.rxbinding2.view.clicks
 import com.jakewharton.rxbinding2.widget.textChanges
 import com.moez.QKSMS.common.QkMediaPlayer
@@ -76,6 +75,7 @@ import dev.octoshrimpy.quik.common.util.extensions.setTint
 import dev.octoshrimpy.quik.common.util.extensions.setVisible
 import dev.octoshrimpy.quik.common.util.extensions.showKeyboard
 import dev.octoshrimpy.quik.common.widget.MicInputCloudView
+import dev.octoshrimpy.quik.databinding.ComposeActivityBinding
 import dev.octoshrimpy.quik.extensions.mapNotNull
 import dev.octoshrimpy.quik.feature.compose.editing.ChipsAdapter
 import dev.octoshrimpy.quik.feature.contacts.ContactsActivity
@@ -85,7 +85,6 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
-import dev.octoshrimpy.quik.databinding.ComposeActivityBinding
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import java.text.SimpleDateFormat
@@ -148,6 +147,9 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
     override val reactionClickIntent: Subject<Long> by lazy { messageAdapter.reactionClicks }
     override val speechRecogniserIntent by lazy { binding.speechToTextIcon.clicks() }
     override val shadeIntent by lazy { binding.shadeBackground.clicks() }
+    override val reactionRemovalClickIntent: Subject<Pair<Long, String>> by lazy { messageAdapter.reactionRemovalClicks }
+    override val sendReactionIntent: Subject<Pair<Long, String>> = PublishSubject.create()
+    override val messageLongClickIntent: Subject<Long> by lazy { messageAdapter.messageLongClicks }
     override val recordAudioStartStopRecording: Subject<Boolean> = PublishSubject.create()
     override val recordAnAudioMessage: Observable<Unit> by lazy {
         Observable.merge(binding.recordAudioMsg.clicks(),
@@ -758,6 +760,16 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
             .setTitle(R.string.compose_reactions_title)
             .setMessage(reactions.joinToString("\n"))
             .show()
+    }
+
+    override fun showEmojiReactionPicker(message: dev.octoshrimpy.quik.model.Message, userEmoji: String?) {
+        EmojiReactionPicker(this, message, userEmoji) { emoji, isRemoval ->
+            if (isRemoval) {
+                reactionRemovalClickIntent.onNext(message.id to emoji)
+            } else {
+                sendReactionIntent.onNext(message.id to emoji)
+            }
+        }.show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

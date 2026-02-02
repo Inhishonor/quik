@@ -49,6 +49,7 @@ import dev.octoshrimpy.quik.common.widget.MicInputCloudView
 import dev.octoshrimpy.quik.common.widget.QkContextMenuRecyclerView
 import dev.octoshrimpy.quik.compat.SubscriptionManagerCompat
 import dev.octoshrimpy.quik.extensions.asObservable
+import dev.octoshrimpy.quik.extensions.getResourceBytes
 import dev.octoshrimpy.quik.extensions.isImage
 import dev.octoshrimpy.quik.extensions.isSmil
 import dev.octoshrimpy.quik.extensions.isText
@@ -58,8 +59,8 @@ import dev.octoshrimpy.quik.interactor.ActionDelayedMessage
 import dev.octoshrimpy.quik.interactor.AddScheduledMessage
 import dev.octoshrimpy.quik.interactor.DeleteMessages
 import dev.octoshrimpy.quik.interactor.MarkRead
-import dev.octoshrimpy.quik.interactor.SendExistingMessage
 import dev.octoshrimpy.quik.interactor.SaveImage
+import dev.octoshrimpy.quik.interactor.SendExistingMessage
 import dev.octoshrimpy.quik.interactor.SendNewMessage
 import dev.octoshrimpy.quik.manager.ActiveConversationManager
 import dev.octoshrimpy.quik.manager.PermissionManager
@@ -74,12 +75,11 @@ import dev.octoshrimpy.quik.repository.ConversationRepository
 import dev.octoshrimpy.quik.repository.MessageRepository
 import dev.octoshrimpy.quik.repository.ScheduledMessageRepository
 import dev.octoshrimpy.quik.util.ActiveSubscriptionObservable
+import dev.octoshrimpy.quik.util.Constants.Companion.DELAY_CANCELLED_CACHED_ATTACHMENTS_FILE_PREFIX
+import dev.octoshrimpy.quik.util.Constants.Companion.SAVED_MESSAGE_TEXT_FILE_PREFIX
 import dev.octoshrimpy.quik.util.FileUtils
 import dev.octoshrimpy.quik.util.PhoneNumberUtils
 import dev.octoshrimpy.quik.util.Preferences
-import dev.octoshrimpy.quik.extensions.getResourceBytes
-import dev.octoshrimpy.quik.util.Constants.Companion.DELAY_CANCELLED_CACHED_ATTACHMENTS_FILE_PREFIX
-import dev.octoshrimpy.quik.util.Constants.Companion.SAVED_MESSAGE_TEXT_FILE_PREFIX
 import dev.octoshrimpy.quik.util.tryOrNull
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -125,6 +125,7 @@ class ComposeViewModel @Inject constructor(
     private val prefs: Preferences,
     private val sendExistingMessage: SendExistingMessage,
     private val sendNewMessage: SendNewMessage,
+    private val sendEmojiReaction: dev.octoshrimpy.quik.interactor.SendEmojiReaction,
     private val subscriptionManager: SubscriptionManagerCompat,
     private val saveImage: SaveImage,
 ) : QkViewModel<ComposeView, ComposeState>(ComposeState(
@@ -766,12 +767,18 @@ class ComposeViewModel @Inject constructor(
             .mapNotNull { messageId -> messageRepo.getMessage(messageId) }
             .withLatestFrom(conversation) { message, conv ->
                 message.emojiReactions.map { reaction ->
-                    val contactName = conv.recipients
-                        .firstOrNull { recipient ->
-                            phoneNumberUtils.compare(recipient.address, reaction.senderAddress)
-                        }
-                        ?.getDisplayName()
-                        ?: reaction.senderAddress
+                    val contactName = when {
+                        reaction.fromMe -> context.getString(R.string.compose_reaction_you)
+                        else -> conv.recipients
+                            .firstOrNull { recipient ->
+                                phoneNumberUtils.compare(
+                                    recipient.address,
+                                    reaction.senderAddress
+                                )
+                            }
+                            ?.getDisplayName()
+                            ?: reaction.senderAddress
+                    }
                     "${reaction.emoji} $contactName"
                 }
             }
@@ -1252,6 +1259,53 @@ class ComposeViewModel @Inject constructor(
             }
             .autoDisposable(view.scope())
             .subscribe()
+
+        // Send emoji reaction
+        view.sendReactionIntent
+            .observeOn(Schedulers.io())
+            .withLatestFrom(state, conversation) { (messageId, emoji), state, conversation ->
+                val subId = state.subscription?.subscriptionId ?: -1
+                sendEmojiReaction.execute(
+                    dev.octoshrimpy.quik.interactor.SendEmojiReaction.Params(
+                        subId = subId,
+                        threadId = conversation.id,
+                        targetMessageId = messageId,
+                        emoji = emoji,
+                        isRemoval = false
+                    )
+                )
+            }
+            .autoDisposable(view.scope())
+            .subscribe()
+
+        // Remove emoji reaction
+        view.reactionRemovalClickIntent
+            .observeOn(Schedulers.io())
+            .withLatestFrom(state, conversation) { (messageId, emoji), state, conversation ->
+                val subId = state.subscription?.subscriptionId ?: -1
+                sendEmojiReaction.execute(
+                    dev.octoshrimpy.quik.interactor.SendEmojiReaction.Params(
+                        subId = subId,
+                        threadId = conversation.id,
+                        targetMessageId = messageId,
+                        emoji = emoji,
+                        isRemoval = true
+                    )
+                )
+            }
+            .autoDisposable(view.scope())
+            .subscribe()
+
+        // Long-press on message to show emoji reaction picker
+        view.messageLongClickIntent
+            .mapNotNull { messageId -> messageRepo.getMessage(messageId) }
+            .autoDisposable(view.scope())
+            .subscribe { message ->
+                val userEmoji = message.emojiReactions
+                    .firstOrNull { it.fromMe }
+                    ?.emoji
+                view.showEmojiReactionPicker(message, userEmoji)
+            }
 
         // Navigate back
         view.optionsItemIntent

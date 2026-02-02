@@ -36,7 +36,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.core.net.toUri
 import com.jakewharton.rxbinding2.view.clicks
@@ -54,6 +53,8 @@ import dev.octoshrimpy.quik.common.util.extensions.setTint
 import dev.octoshrimpy.quik.common.util.extensions.setVisible
 import dev.octoshrimpy.quik.common.util.extensions.withAlpha
 import dev.octoshrimpy.quik.compat.SubscriptionManagerCompat
+import dev.octoshrimpy.quik.databinding.MessageListItemInBinding
+import dev.octoshrimpy.quik.databinding.MessageListItemOutBinding
 import dev.octoshrimpy.quik.extensions.isSmil
 import dev.octoshrimpy.quik.extensions.isText
 import dev.octoshrimpy.quik.extensions.joinTo
@@ -66,15 +67,12 @@ import dev.octoshrimpy.quik.feature.extensions.isEmojiOnly
 import dev.octoshrimpy.quik.model.Conversation
 import dev.octoshrimpy.quik.model.Message
 import dev.octoshrimpy.quik.model.Recipient
-import dev.octoshrimpy.quik.databinding.MessageListItemInBinding
-import dev.octoshrimpy.quik.databinding.MessageListItemOutBinding
 import dev.octoshrimpy.quik.util.PhoneNumberUtils
 import dev.octoshrimpy.quik.util.Preferences
 import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import io.realm.RealmResults
-import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Provider
@@ -111,6 +109,8 @@ class MessagesAdapter @Inject constructor(
     val resendClicks: Subject<Long> = PublishSubject.create()
     val partContextMenuRegistrar: Subject<View> = PublishSubject.create()
     val reactionClicks: Subject<Long> = PublishSubject.create()
+    val reactionRemovalClicks: Subject<Pair<Long, String>> = PublishSubject.create()
+    val messageLongClicks: Subject<Long> = PublishSubject.create()
 
     var data: Pair<Conversation, RealmResults<Message>>? = null
         set(value) {
@@ -336,10 +336,10 @@ class MessagesAdapter @Inject constructor(
         timestamp.apply {
             text = dateFormatter.getMessageTimestamp(message.date)
             setVisible(
-                    ((message.date - (previous?.date ?: 0))
-                        .millisecondsToMinutes() >= BubbleUtils.TIMESTAMP_THRESHOLD) ||
-                            (message.subId != previous?.subId) &&
-                            (subscription != null)
+                ((message.date - (previous?.date ?: 0))
+                    .millisecondsToMinutes() >= BubbleUtils.TIMESTAMP_THRESHOLD) ||
+                        (message.subId != previous?.subId) &&
+                        (subscription != null)
             )
         }
 
@@ -398,6 +398,7 @@ class MessagesAdapter @Inject constructor(
                     }
                 }
             }
+
             else -> body.movementMethod = LinkMovementMethod.getInstance()
         }
 
@@ -414,6 +415,11 @@ class MessagesAdapter @Inject constructor(
                     isMe = message.isMe()
                 )
             )
+
+            setOnLongClickListener {
+                messageLongClicks.onNext(message.id)
+                true
+            }
         }
 
         // Bind the parts
@@ -427,7 +433,11 @@ class MessagesAdapter @Inject constructor(
         showEmojiReactions(reactions, reactionText, message)
     }
 
-    private fun showEmojiReactions(reactionsContainer: View, reactionTextView: TextView, message: Message) {
+    private fun showEmojiReactions(
+        reactionsContainer: View,
+        reactionTextView: TextView,
+        message: Message
+    ) {
         val reactions = message.emojiReactions
         val hasReactions = reactions.isNotEmpty()
 
@@ -443,13 +453,32 @@ class MessagesAdapter @Inject constructor(
             }
 
             reactionTextView.text = reactionText
-            reactionTextView.setOnClickListener { reactionClicks.onNext(message.id) }
+
+            // Check if there's a single reaction from the user
+            val userReaction = if (totalCount == 1) {
+                val reaction = reactions.firstOrNull()
+                val reactionMessage = reaction?.let { r ->
+                    data?.second?.firstOrNull { it.id == r.reactionMessageId }
+                }
+                if (reactionMessage?.isMe() == true) reaction else null
+            } else null
+
+            // If it's the user's own single reaction, tapping removes it
+            if (userReaction != null) {
+                reactionTextView.setOnClickListener {
+                    reactionRemovalClicks.onNext(message.id to userReaction.emoji)
+                }
+            } else {
+                reactionTextView.setOnClickListener { reactionClicks.onNext(message.id) }
+            }
+
             reactionsContainer.setVisible(true)
         } else {
             reactionsContainer.setVisible(false)
             reactionTextView.setOnClickListener(null)
         }
     }
+
 
 
     private fun bindStatus(

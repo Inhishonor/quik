@@ -4,6 +4,7 @@ import android.text.Spannable
 import androidx.emoji2.text.EmojiCompat
 import androidx.emoji2.text.EmojiCompat.REPLACE_STRATEGY_ALL
 import androidx.emoji2.text.EmojiSpan
+import timber.log.Timber
 
 
 fun CharSequence.isEmojiOnly(considerWhitespace: Boolean = false): Boolean {
@@ -14,7 +15,17 @@ fun CharSequence.isEmojiOnly(considerWhitespace: Boolean = false): Boolean {
     if (cs.isEmpty())
         return false
 
-    return when (val spannable = EmojiCompat.get().process(
+    val emojiCompat = try {
+        EmojiCompat.get()
+    } catch (e: IllegalStateException) {
+        Timber.e(e)
+        return false
+    }
+    if (emojiCompat.loadState != EmojiCompat.LOAD_STATE_SUCCEEDED) {
+        return false
+    }
+
+    return when (val spannable = emojiCompat.process(
         cs,
         0,
         (cs.length - 1),

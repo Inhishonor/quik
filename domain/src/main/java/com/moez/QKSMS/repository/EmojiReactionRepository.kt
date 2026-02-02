@@ -18,6 +18,7 @@
  */
 package dev.octoshrimpy.quik.repository
 
+import dev.octoshrimpy.quik.model.EmojiReaction
 import dev.octoshrimpy.quik.model.Message
 import io.realm.Realm
 
@@ -44,4 +45,22 @@ interface EmojiReactionRepository {
         realm: Realm,
         onProgress: (SyncRepository.SyncProgress) -> Unit
     )
+
+    fun formatReactionSms(emoji: String, targetMessageText: String, isRemoval: Boolean): String
+
+    fun saveOutgoingReaction(
+        subId: Int,
+        reactionMessageId: Long,
+        targetMessage: Message,
+        emoji: String,
+        threadId: Long
+    )
+
+    fun removeOutgoingReaction(
+        subId: Int,
+        targetMessage: Message,
+        emoji: String
+    )
+
+    fun findReactionsForMessage(targetMessage: Message, emoji: String): EmojiReaction?
 }

@@ -39,4 +39,6 @@ open class EmojiReaction : RealmObject() {
 
     /** Thread ID for easier querying */
     @Index var threadId: Long = 0
+
+    var fromMe: Boolean = false
 }
