@@ -21,8 +21,6 @@ package dev.octoshrimpy.quik.repository
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.net.Uri
-import android.os.Handler
-import android.os.HandlerThread
 import android.provider.Telephony
 import com.f2prateek.rx.preferences2.RxSharedPreferences
 import dev.octoshrimpy.quik.extensions.forEach
@@ -39,7 +37,6 @@ import dev.octoshrimpy.quik.mapper.CursorToRecipient
 import dev.octoshrimpy.quik.model.Contact
 import dev.octoshrimpy.quik.model.ContactGroup
 import dev.octoshrimpy.quik.model.Conversation
-import dev.octoshrimpy.quik.model.EmojiReaction
 import dev.octoshrimpy.quik.model.Message
 import dev.octoshrimpy.quik.model.MmsPart
 import dev.octoshrimpy.quik.model.PhoneNumber
@@ -88,11 +85,8 @@ class SyncRepositoryImpl @Inject constructor(
         if (syncProgress.blockingFirst() is SyncRepository.SyncProgress.Running) return
         syncProgress.onNext(SyncRepository.SyncProgress.Running(0, 0, true))
 
-        val handlerThread = HandlerThread("RealmSyncThread")
-        handlerThread.start()
-        Handler(handlerThread.looper).post {
-            Realm.getDefaultInstance().executeTransactionAsync(
-                { realm ->
+        val realm = Realm.getDefaultInstance()
+        realm.beginTransaction()
                 // Prepare existing conversation data
                 val persistedData = realm.copyFromRealm(
                     realm.where(Conversation::class.java)
@@ -130,7 +124,7 @@ class SyncRepositoryImpl @Inject constructor(
 
                 // Sync message parts
                 partsCursor?.use {
-                    partsCursor.forEach { cursor ->
+                    partsCursor.forEach {
                         tryOrNull {
                             val part = cursorToPart.map(partsCursor)
                             realm.insertOrUpdate(part)
@@ -251,9 +245,11 @@ class SyncRepositoryImpl @Inject constructor(
                                 is MessageRepository.DeduplicationResult.NoDuplicates -> {
                                     Timber.i("No duplicate messages found.")
                                 }
+
                                 is MessageRepository.DeduplicationResult.Success -> {
                                     Timber.i("Deleted duplicate messages")
                                 }
+
                                 is MessageRepository.DeduplicationResult.Failure -> {
                                     Timber.e(result.error, "Deduplication failed")
                                 }
@@ -262,17 +258,14 @@ class SyncRepositoryImpl @Inject constructor(
                 }
 
                 realm.insert(SyncLog())
-            }, {
-                handlerThread.quitSafely()
+                realm.insert(SyncLog())
+                realm.commitTransaction()
+                realm.close()
+
+                // Only delete this after the sync has successfully completed
                 oldBlockedSenders.delete()
+
                 syncProgress.onNext(SyncRepository.SyncProgress.Idle)
-            },
-                { error ->
-                    handlerThread.quitSafely()
-                    Timber.e(error, "syncMessages Failed")
-                    syncProgress.onNext(SyncRepository.SyncProgress.Idle)
-                })
-        }
     }
 
     override fun syncMessage(uri: Uri, messageId: Long): Message? {
