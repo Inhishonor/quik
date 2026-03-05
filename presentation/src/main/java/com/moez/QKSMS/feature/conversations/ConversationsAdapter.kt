@@ -109,8 +109,9 @@ class ConversationsAdapter @Inject constructor(
 
         binding.avatars.recipients = conversation.recipients
         binding.title.collapseEnabled = conversation.recipients.size > 1
+        val titleText = conversation.getTitle().takeIf { it.isNotBlank() } ?: conversation.lastMessage?.address ?: "Unknown Sender"
         binding.title.text = buildSpannedString {
-            append(conversation.getTitle())
+            append(titleText)
         }
         binding.date.text = conversation.date.takeIf { it > 0 }?.let(dateFormatter::getConversationTimestamp)
         binding.snippet.text = when {
