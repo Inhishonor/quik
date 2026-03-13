@@ -61,13 +61,19 @@ class TextViewStyler @Inject constructor(
                 var textSizeAttr = 0
 
                 when (this) {
-                    is QkTextView -> context.obtainStyledAttributes(attrs, R.styleable.QkTextView).run {
+                    is QkTextView -> context.obtainStyledAttributes(
+                        attrs,
+                        R.styleable.QkTextView
+                    ).run {
                         colorAttr = getInt(R.styleable.QkTextView_textColor, -1)
                         textSizeAttr = getInt(R.styleable.QkTextView_textSize, -1)
                         recycle()
                     }
 
-                    is QkEditText -> context.obtainStyledAttributes(attrs, R.styleable.QkEditText).run {
+                    is QkEditText -> context.obtainStyledAttributes(
+                        attrs,
+                        R.styleable.QkEditText
+                    ).run {
                         colorAttr = getInt(R.styleable.QkEditText_textColor, -1)
                         textSizeAttr = getInt(R.styleable.QkEditText_textSize, -1)
                         recycle()
@@ -107,13 +113,19 @@ class TextViewStyler @Inject constructor(
         }
 
         when (textView) {
-            is QkTextView -> textView.context.obtainStyledAttributes(attrs, R.styleable.QkTextView).run {
+            is QkTextView -> textView.context.obtainStyledAttributes(
+                attrs,
+                R.styleable.QkTextView
+            ).run {
                 colorAttr = getInt(R.styleable.QkTextView_textColor, -1)
                 textSizeAttr = getInt(R.styleable.QkTextView_textSize, -1)
                 recycle()
             }
 
-            is QkEditText -> textView.context.obtainStyledAttributes(attrs, R.styleable.QkEditText).run {
+            is QkEditText -> textView.context.obtainStyledAttributes(
+                attrs,
+                R.styleable.QkEditText
+            ).run {
                 colorAttr = getInt(R.styleable.QkEditText_textColor, -1)
                 textSizeAttr = getInt(R.styleable.QkEditText_textSize, -1)
                 recycle()
@@ -132,7 +144,9 @@ class TextViewStyler @Inject constructor(
         setTextSize(textView, textSizeAttr)
 
         if (textView is EditText) {
-            val drawable = textView.resources.getDrawable(R.drawable.cursor).apply { setTint(colors.theme().theme) }
+            val drawable = textView.resources.getDrawable(R.drawable.cursor).apply {
+                setTint(colors.theme().theme)
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 textView.textCursorDrawable = drawable
             }

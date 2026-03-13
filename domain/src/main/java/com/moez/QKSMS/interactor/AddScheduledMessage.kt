@@ -73,7 +73,7 @@ class AddScheduledMessage @Inject constructor(
 
                             val (localUri, e) = FileUtils.createAndWrite(
                                 context,
-                                FileUtils.Location.Files,  // files dir so not deleted if app cache wiped by user
+                                FileUtils.Location.Files, // files dir so not deleted if app cache wiped
                                 "${Constants.SCHEDULED_MESSAGE_FILE_PREFIX}-${scheduledMessage.id}/" +
                                                     "${UUID.randomUUID()}/${filename}",
                                 "",

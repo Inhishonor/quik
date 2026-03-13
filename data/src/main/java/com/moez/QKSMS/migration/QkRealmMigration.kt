@@ -215,11 +215,22 @@ class QkRealmMigration @Inject constructor(
                 }
             }
 
-            if (prefs.notifAction1.isSet) prefs.notifAction1.set(migrateNotificationAction(prefs.notifAction1.get()))
-            if (prefs.notifAction2.isSet) prefs.notifAction2.set(migrateNotificationAction(prefs.notifAction2.get()))
-            if (prefs.notifAction3.isSet) prefs.notifAction3.set(migrateNotificationAction(prefs.notifAction3.get()))
-            if (prefs.swipeLeft.isSet) prefs.swipeLeft.set(migrateSwipeAction(prefs.swipeLeft.get()))
-            if (prefs.swipeRight.isSet) prefs.swipeRight.set(migrateSwipeAction(prefs.swipeRight.get()))
+            if (prefs.notifAction1.isSet) {
+                prefs.notifAction1.set(migrateNotificationAction(prefs.notifAction1.get()))
+            }
+            if (prefs.notifAction2.isSet) {
+                prefs.notifAction2.set(migrateNotificationAction(prefs.notifAction2.get()))
+            }
+            if (prefs.notifAction3.isSet) {
+                prefs.notifAction3.set(migrateNotificationAction(prefs.notifAction3.get()))
+            }
+            if (prefs.swipeLeft.isSet) {
+
+                prefs.swipeLeft.set(migrateSwipeAction(prefs.swipeLeft.get()))
+            }
+            if (prefs.swipeRight.isSet) {
+                prefs.swipeRight.set(migrateSwipeAction(prefs.swipeRight.get()))
+            }
 
             version++
         }

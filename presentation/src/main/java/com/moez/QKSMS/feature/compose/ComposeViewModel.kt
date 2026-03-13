@@ -269,7 +269,9 @@ class ComposeViewModel @Inject constructor(
                 newState { copy(validRecipientNumbers = validRecipientNumbers) }
             }
 
-        disposables += Observables.combineLatest(searchSelection, searchResults) { selected, messages ->
+        disposables += Observables.combineLatest(
+            searchSelection, searchResults
+        ) { selected, messages ->
             if (selected == -1L) {
                 messages.lastOrNull()?.let { message -> searchSelection.onNext(message.id) }
             } else {
@@ -337,10 +339,14 @@ class ComposeViewModel @Inject constructor(
                         conversationRepo.getRecipients()
                                 .asSequence()
                                 .filter { recipient -> recipient.contact?.lookupKey == lookupKey }
-                                .firstOrNull { recipient -> phoneNumberUtils.compare(recipient.address, address) }
+                                .firstOrNull { recipient ->
+                                    phoneNumberUtils.compare(recipient.address, address)
+                                }
                                 ?: Recipient(
                                         address = address,
-                                        contact = lookupKey?.let(contactRepo::getUnmanagedContact))
+                                        contact = lookupKey?.let(
+                                            contactRepo::getUnmanagedContact)
+                                )
                     }
                 }
                 .autoDisposable(view.scope())
@@ -654,7 +660,11 @@ class ComposeViewModel @Inject constructor(
                 .autoDisposable(view.scope())
                 .subscribe {
                     navigator.viewFile(
-                        MmsPartProvider().getUriForMmsPartId(context, it.id, it.getBestFilename()),
+                        MmsPartProvider().getUriForMmsPartId(
+                            context,
+                            it.id,
+                            it.getBestFilename()
+                        ),
                         it.type
                     )
                 }
@@ -946,7 +956,9 @@ class ComposeViewModel @Inject constructor(
         // Show the remaining character counter when necessary
         view.textChangedIntent
                 .observeOn(Schedulers.computation())
-                .mapNotNull { draft -> tryOrNull { SmsMessage.calculateLength(draft, prefs.unicode.get()) } }
+                .mapNotNull { draft -> tryOrNull {
+                    SmsMessage.calculateLength(draft, prefs.unicode.get()) }
+                }
                 .map { array ->
                     val messages = array[0]
                     val remaining = array[2]
@@ -970,7 +982,9 @@ class ComposeViewModel @Inject constructor(
         view.changeSimIntent
                 .withLatestFrom(state) { _, state ->
                     val subs = subscriptionManager.activeSubscriptionInfoList
-                    val subIndex = subs.indexOfFirst { it.subscriptionId == state.subscription?.subscriptionId }
+                    val subIndex = subs.indexOfFirst {
+                        it.subscriptionId == state.subscription?.subscriptionId
+                    }
                     val subscription = when {
                         subIndex == -1 -> null
                         subIndex < subs.size - 1 -> subs[subIndex + 1]
@@ -1279,9 +1293,13 @@ class ComposeViewModel @Inject constructor(
 
         // Delete the message
         view.confirmDeleteIntent
-                .withLatestFrom(view.messagesSelectedIntent, conversation) { _, messages, conversation ->
-                    deleteMessages.execute(DeleteMessages.Params(messages.toList(), conversation.id))
-                }
+                .withLatestFrom(
+                    view.messagesSelectedIntent,
+                    conversation) { _, messages, conversation ->
+                        deleteMessages.execute(
+                            DeleteMessages.Params(messages.toList(), conversation.id)
+                        )
+                    }
                 .autoDisposable(view.scope())
                 .subscribe { view.clearSelection() }
 

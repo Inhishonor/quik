@@ -34,7 +34,9 @@ open class Recipient(
      * Return a string that can be displayed to represent the name of this contact
      */
     fun getDisplayName(): String = contact?.name?.takeIf { it.isNotBlank() }
-            ?: PhoneNumberUtils.formatNumber(address, Locale.getDefault().country) // TODO: Use our own PhoneNumberUtils
+            ?: PhoneNumberUtils.formatNumber(
+                address, Locale.getDefault().country
+            ) // TODO: Use our own PhoneNumberUtils
             ?: address
 
 }

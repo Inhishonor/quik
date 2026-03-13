@@ -126,7 +126,8 @@ class SpeakManager @Inject constructor (private val context: Context) {
                 }
             })
 
-            // assign all these local vars to statics at once so if staticTextToSpeech is set then we know all are set
+            // assign all these local vars to statics at once
+            // so if staticTextToSpeech is set then we know all are set
             staticTextToSpeech.set(tts)
             audioManager = localAudioManager
             audioFocusRequest = localAudioFocusRequest
@@ -170,11 +171,20 @@ class SpeakManager @Inject constructor (private val context: Context) {
         }
 
         return when {
-            (then.get(Calendar.DATE) == now.get(Calendar.DATE)) -> StringBuilder()      // today
-            (yesterdayCheck.get(Calendar.DATE) == now.get(Calendar.DATE)) -> StringBuilder("yesterday")     // yesterday
-            (lastWeekCheck.get(Calendar.DATE) > now.get(Calendar.DATE)) -> StringBuilder("on ").append(getFormatter("EEEE").format(date))   // during last week
-            (then.get(Calendar.YEAR) == now.get(Calendar.YEAR)) -> StringBuilder("on ").append(getFormatter("MMMM d").format(date))     // this year
-            else -> StringBuilder("on").append(getFormatter("MMMM d yyyy").format(date))    // otherwise
+            (then.get(Calendar.DATE) == now.get(Calendar.DATE)) ->
+                // today
+                StringBuilder()
+            (yesterdayCheck.get(Calendar.DATE) == now.get(Calendar.DATE)) ->
+                // yesterday
+                StringBuilder("yesterday")
+            (lastWeekCheck.get(Calendar.DATE) > now.get(Calendar.DATE)) ->
+                // during last week
+                StringBuilder("on ").append(getFormatter("EEEE").format(date))
+            (then.get(Calendar.YEAR) == now.get(Calendar.YEAR)) ->
+                // this year
+                StringBuilder("on ").append(getFormatter("MMMM d").format(date))
+            else ->
+                StringBuilder("on").append(getFormatter("MMMM d yyyy").format(date))
         }.append(" at ").append(timeWithSplitAmPmForSpeech).toString()
     }
 
@@ -205,7 +215,7 @@ class SpeakManager @Inject constructor (private val context: Context) {
         if (tts === null)
             return
 
-        currentSessionId = null     // no utteranceprogresslistener callback so set this explicitly here
+        currentSessionId = null // no utteranceprogresslistener callback so set this explicitly here
         tts.stop()
 
         // abandon audio focus

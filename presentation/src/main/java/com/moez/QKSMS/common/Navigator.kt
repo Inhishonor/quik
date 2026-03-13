@@ -190,22 +190,33 @@ class Navigator @Inject constructor(
     }
 
     fun showDeveloper() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/quik-sms/quik/graphs/contributors"))
+        val intent = Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("https://github.com/quik-sms/quik/graphs/contributors")
+        )
         startActivityExternal(intent)
     }
 
     fun showSourceCode() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/quik-sms/quik"))
+        val intent = Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("https://github.com/quik-sms/quik"))
         startActivityExternal(intent)
     }
 
     fun showChangelog() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/quik-sms/quik/releases"))
+        val intent = Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("https://github.com/quik-sms/quik/releases")
+        )
         startActivityExternal(intent)
     }
 
     fun showLicense() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/quik-sms/quik/blob/master/LICENSE"))
+        val intent = Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("https://github.com/quik-sms/quik/blob/master/LICENSE")
+        )
         startActivityExternal(intent)
     }
 
@@ -221,15 +232,22 @@ class Navigator @Inject constructor(
     }
 
     fun showDonation() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/quik-sms/quik"))
+        val intent = Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("https://github.com/quik-sms/quik")
+        )
         startActivityExternal(intent)
     }
 
     fun showRating() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/quik-sms/quik"))
-                .addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY
-                        or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
-                        or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+        val intent = Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("https://github.com/quik-sms/quik")
+        ).addFlags(
+            Intent.FLAG_ACTIVITY_NO_HISTORY
+            or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
+            or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+        )
 
         try {
             startActivityExternal(intent)
@@ -243,7 +261,8 @@ class Navigator @Inject constructor(
      * Launch the Play Store and display the Call Blocker listing
      */
     fun installCallBlocker() {
-        val url = "https://play.google.com/store/apps/details?id=com.cuiet.blockCalls"
+        val url =
+            "https://play.google.com/store/apps/details?id=com.cuiet.blockCalls"
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         startActivityExternal(intent)
     }
@@ -252,7 +271,8 @@ class Navigator @Inject constructor(
      * Launch the Play Store and display the Call Control listing
      */
     fun installCallControl() {
-        val url = "https://play.google.com/store/apps/details?id=com.flexaspect.android.everycallcontrol"
+        val url =
+            "https://play.google.com/store/apps/details?id=com.flexaspect.android.everycallcontrol"
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         startActivityExternal(intent)
     }
@@ -261,7 +281,8 @@ class Navigator @Inject constructor(
      * Launch the Play Store and display the Should I Answer? listing
      */
     fun installSia() {
-        val url = "https://play.google.com/store/apps/details?id=org.mistergroup.shouldianswer"
+        val url =
+            "https://play.google.com/store/apps/details?id=org.mistergroup.shouldianswer"
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         startActivityExternal(intent)
     }

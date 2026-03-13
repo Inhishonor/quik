@@ -28,7 +28,12 @@ import androidx.viewbinding.ViewBinding
 import com.bluelinelabs.conductor.archlifecycle.LifecycleController
 import dev.octoshrimpy.quik.R
 
-abstract class QkController<VB : ViewBinding, ViewContract : QkViewContract<State>, State, Presenter : QkPresenter<ViewContract, State>> : LifecycleController() {
+abstract class QkController<
+    VB : ViewBinding,
+    ViewContract : QkViewContract<State>,
+    State,
+    Presenter : QkPresenter<ViewContract, State>
+> : LifecycleController() {
 
     abstract var presenter: Presenter
 

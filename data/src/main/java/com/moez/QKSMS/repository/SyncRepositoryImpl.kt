@@ -321,7 +321,9 @@ class SyncRepositoryImpl @Inject constructor(
 
                 if (isMms()) {
                     parts = RealmList<MmsPart>().apply {
-                        addAll(cursorToPart.getPartsCursor(contentId)?.map { cursorToPart.map(it) }.orEmpty())
+                        addAll(cursorToPart.getPartsCursor(contentId)?.map {
+                            cursorToPart.map(it)
+                        }.orEmpty())
                     }
                 }
 
@@ -368,7 +370,9 @@ class SyncRepositoryImpl @Inject constructor(
                 // Update all the recipients with the new contacts
                 recipients.forEach { recipient ->
                     recipient.contact = contacts.find { contact ->
-                        contact.numbers.any { phoneNumberUtils.compare(recipient.address, it.address) }
+                        contact.numbers.any {
+                            phoneNumberUtils.compare(recipient.address, it.address)
+                        }
                     }
                 }
 
@@ -390,8 +394,9 @@ class SyncRepositoryImpl @Inject constructor(
                 ?.map { cursor -> cursorToContact.map(cursor) }
                 ?.groupBy { contact -> contact.lookupKey }
                 ?.map { contacts ->
-                    // Sometimes, contacts providers on the phone will create duplicate phone number entries. This
-                    // commonly happens with Whatsapp. Let's try to detect these duplicate entries and filter them out
+                    // Sometimes, contacts providers on the phone will create duplicate phone number entries.
+                    // This commonly happens with Whatsapp.
+                    // Let's try to detect these duplicate entries and filter them out
                     val uniqueNumbers = mutableListOf<PhoneNumber>()
                     contacts.value
                             .flatMap { it.numbers }
@@ -427,7 +432,11 @@ class SyncRepositoryImpl @Inject constructor(
         groups.forEach { group ->
             group.contacts.addAll(groupMembers
                     .filter { member -> member.groupId == group.id }
-                    .mapNotNull { member -> contacts.find { contact -> contact.lookupKey == member.lookupKey } })
+                    .mapNotNull { member ->
+                        contacts.find {
+                            contact -> contact.lookupKey == member.lookupKey
+                        }
+                    })
         }
 
         return groups

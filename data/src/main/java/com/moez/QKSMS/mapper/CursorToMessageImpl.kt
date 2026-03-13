@@ -76,7 +76,8 @@ class CursorToMessageImpl @Inject constructor(
 
         return Message().apply {
             type = when {
-                cursor.getColumnIndex(MmsSms.TYPE_DISCRIMINATOR_COLUMN) != -1 -> cursor.getString(columnsMap.msgType)
+                cursor.getColumnIndex(MmsSms.TYPE_DISCRIMINATOR_COLUMN) != -1 ->
+                    cursor.getString(columnsMap.msgType)
                 cursor.getColumnIndex(Mms.SUBJECT) != -1 -> Message.TYPE_MMS
                 cursor.getColumnIndex(Sms.ADDRESS) != -1 -> Message.TYPE_SMS
                 else -> "unknown"
@@ -100,7 +101,8 @@ class CursorToMessageImpl @Inject constructor(
 
                     body = columnsMap.smsBody
                             .takeIf { column -> column != -1 } // The column may not be set
-                            ?.let { column -> cursor.getString(column) } ?: "" // cursor.getString() may return null
+                            // cursor.getString() may return null
+                            ?.let { column -> cursor.getString(column) } ?: ""
 
                     errorCode = cursor.getInt(columnsMap.smsErrorCode)
                     deliveryStatus = cursor.getInt(columnsMap.smsStatus)
@@ -137,7 +139,11 @@ class CursorToMessageImpl @Inject constructor(
         // column. In this case, we need to check if we do, before trying to sync messages
         if (!preferences.canUseSubId.isSet) {
             val canUseSubId = tryOrNull {
-                SqliteWrapper.query(context, uri, arrayOf(Mms.SUBSCRIPTION_ID), logError = false)?.use { true }
+                SqliteWrapper.query(
+                    context,
+                    uri,
+                    arrayOf(Mms.SUBSCRIPTION_ID), logError = false
+                )?.use { true }
             }
 
             preferences.canUseSubId.set(canUseSubId ?: false)
@@ -155,7 +161,7 @@ class CursorToMessageImpl @Inject constructor(
     }
 
     override fun getMessageCursor(id: Long): Cursor? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented")
     }
 
     private fun getMmsAddress(messageId: Long): String {
