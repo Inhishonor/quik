@@ -90,8 +90,7 @@ class ShortcutManagerImpl @Inject constructor(
             val shortcutManager = context.getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager
             if (getOrCreateShortcut(threadId ) == null) {
                 val conversation = conversationRepo.getOrCreateConversation(threadId) ?: return
-                val shortcut = createShortcutForConversation(conversation)
-                ShortcutManagerCompat.setDynamicShortcuts(context, listOf(shortcut))
+                createShortcutForConversation(conversation)
             }
             shortcutManager.reportShortcutUsed(threadId.toString())
         }
