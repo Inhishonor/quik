@@ -29,6 +29,7 @@ import dev.octoshrimpy.quik.BuildConfig
 import dev.octoshrimpy.quik.manager.BillingManager
 import dev.octoshrimpy.quik.manager.PermissionManager
 import javax.inject.Inject
+import androidx.core.net.toUri
 
 /**
  * Navigator to open activities outside of the app
@@ -40,38 +41,40 @@ class ExternalNavigator @Inject constructor(
     private val permissions: PermissionManager
 ) : QkNavigator(context) {
     fun showDeveloper() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/quik-sms/quik/graphs/contributors"))
+        val intent = Intent(Intent.ACTION_VIEW,
+            "https://github.com/quik-sms/quik/graphs/contributors".toUri())
         startActivityExternal(intent)
     }
 
     fun showSourceCode() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/quik-sms/quik"))
+        val intent = Intent(Intent.ACTION_VIEW, "https://github.com/quik-sms/quik".toUri())
         startActivityExternal(intent)
     }
 
     fun showChangelog() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/quik-sms/quik/releases"))
+        val intent = Intent(Intent.ACTION_VIEW, "https://github.com/quik-sms/quik/releases".toUri())
         startActivityExternal(intent)
     }
 
     fun showLicense() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/quik-sms/quik/blob/master/LICENSE"))
+        val intent = Intent(Intent.ACTION_VIEW,
+            "https://github.com/quik-sms/quik/blob/master/LICENSE".toUri())
         startActivityExternal(intent)
     }
 
     fun makePhoneCall(address: String) {
         val action = if (permissions.hasCalling()) Intent.ACTION_CALL else Intent.ACTION_DIAL
-        val intent = Intent(action, Uri.parse("tel:$address"))
+        val intent = Intent(action, "tel:$address".toUri())
         startActivityExternal(intent)
     }
 
     fun showDonation() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/quik-sms/quik"))
+        val intent = Intent(Intent.ACTION_VIEW, "https://github.com/quik-sms/quik".toUri())
         startActivityExternal(intent)
     }
 
     fun showRating() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/quik-sms/quik"))
+        val intent = Intent(Intent.ACTION_VIEW, "https://github.com/quik-sms/quik".toUri())
             .addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY
                     or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
                     or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
@@ -80,7 +83,7 @@ class ExternalNavigator @Inject constructor(
             startActivityExternal(intent)
         } catch (_: ActivityNotFoundException) {
             val url = "https://github.com/quik-sms/quik"
-            startActivityExternal(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+            startActivityExternal(Intent(Intent.ACTION_VIEW, url.toUri()))
         }
     }
 
@@ -89,7 +92,7 @@ class ExternalNavigator @Inject constructor(
      */
     fun installCallBlocker() {
         val url = "https://play.google.com/store/apps/details?id=com.cuiet.blockCalls"
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
         startActivityExternal(intent)
     }
 
@@ -98,7 +101,7 @@ class ExternalNavigator @Inject constructor(
      */
     fun installCallControl() {
         val url = "https://play.google.com/store/apps/details?id=com.flexaspect.android.everycallcontrol"
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
         startActivityExternal(intent)
     }
 
@@ -107,13 +110,13 @@ class ExternalNavigator @Inject constructor(
      */
     fun installSia() {
         val url = "https://play.google.com/store/apps/details?id=org.mistergroup.shouldianswer"
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
         startActivityExternal(intent)
     }
 
     fun showSupport() {
         val intent = Intent(Intent.ACTION_SENDTO)
-        intent.data = Uri.parse("mailto:")
+        intent.data = "mailto:".toUri()
         intent.putExtra(Intent.EXTRA_EMAIL, arrayOf("quik@octo.sh"))
         intent.putExtra(Intent.EXTRA_SUBJECT, "QUIK Support")
         intent.putExtra(Intent.EXTRA_TEXT, StringBuilder("\n\n")
@@ -139,7 +142,7 @@ class ExternalNavigator @Inject constructor(
     fun showExactAlarmsSettings() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-                .setData(Uri.parse("package:${context.packageName}"))
+                .setData("package:${context.packageName}".toUri())
             startActivity(intent)
         }
     }
