@@ -59,6 +59,7 @@ import dev.octoshrimpy.quik.receiver.MessageDeliveredReceiver
 import dev.octoshrimpy.quik.receiver.MessageSentReceiver
 import dev.octoshrimpy.quik.receiver.SendDelayedMessageReceiver
 import dev.octoshrimpy.quik.receiver.SendDelayedMessageReceiver.Companion.MESSAGE_ID_EXTRA
+import dev.octoshrimpy.quik.util.GifCompressor
 import dev.octoshrimpy.quik.util.ImageUtils
 import dev.octoshrimpy.quik.util.PhoneNumberUtils
 import dev.octoshrimpy.quik.util.Preferences
@@ -83,6 +84,7 @@ open class MessageRepositoryImpl @Inject constructor(
     private val context: Context,
     private val messageIds: KeyManager,
     private val phoneNumberUtils: PhoneNumberUtils,
+    private val gifCompressor: GifCompressor,
     private val prefs: Preferences,
     private val syncRepository: SyncRepository,
     private val reactions: EmojiReactionRepository,
@@ -457,6 +459,9 @@ open class MessageRepositoryImpl @Inject constructor(
                 ?.let(SmsManagerFactory::createSmsManager)
                 ?: SmsManager.getDefault()
 
+            val allowAttachAudio = smsManager.carrierConfigValues
+                .getBoolean(SmsManager.MMS_CONFIG_ALLOW_ATTACH_AUDIO, true)
+
             val maxWidth = smsManager.carrierConfigValues
                 .getInt(SmsManager.MMS_CONFIG_MAX_IMAGE_WIDTH)
                 .takeIf { prefs.mmsSize.get() == -1 }
@@ -474,9 +479,6 @@ open class MessageRepositoryImpl @Inject constructor(
             } * 0.9 // Ugly, but buys us a bit of wiggle room
 
             remainingBytes -= body.takeIf { it.isNotEmpty() }?.toByteArray()?.size ?: 0
-
-            val allowAttachAudio = smsManager.carrierConfigValues
-                .getBoolean(SmsManager.MMS_CONFIG_ALLOW_ATTACH_AUDIO, true)
 
             // Attach those that can't be compressed (ie. everything but images)
             parts += attachments
@@ -505,9 +507,11 @@ open class MessageRepositoryImpl @Inject constructor(
                 // filter in only items that exist (user may have deleted the file)
                 .filter { it.uri.resourceExists(context) }
                 .associateWith {
-                    when (it.getType(context) == "image/gif") {
-                        true -> ImageUtils.getScaledGif(context, it.uri, maxWidth, maxHeight)
-                        false -> ImageUtils.getScaledImage(context, it.uri, maxWidth, maxHeight)
+                    requireNotNull(context.contentResolver
+                        .openAssetFileDescriptor(it.uri, "r")).use { afd ->
+                        afd.createInputStream().use { input ->
+                            input.readBytes()
+                        }
                     }
                 }
                 .toMutableMap()
@@ -614,28 +618,35 @@ open class MessageRepositoryImpl @Inject constructor(
                 var bestBytes: ByteArray? = null
                 var attempt = 0
 
-                while (lo <= hi) {
-                    val midWidth = (lo + hi) / 2
-                    val midHeight = (midWidth / aspectRatio).toInt().coerceAtLeast(1)
-                    attempt++
-                    val candidate = if (isGif) {
-                        ImageUtils.getScaledGif(context, attachment.uri, midWidth, midHeight)
-                    } else {
-                        ImageUtils.getScaledImage(context, attachment.uri, midWidth, midHeight)
-                    }
-                    Timber.d(
-                        "Compression attempt $attempt: ${
-                            candidate.size / 1024
-                        }/${maxBytes / 1024}Kb ($origWidth*$origHeight -> $midWidth*$midHeight)"
-                    )
-                    if (candidate.size <= maxBytes) {
-                        bestBytes = candidate
-                        lo = midWidth + 1
-                    } else {
-                        hi = midWidth - 1
-                    }
+                if (!isGif) {
+                    while (lo <= hi) {
+                        val midWidth = (lo + hi) / 2
+                        val midHeight = (midWidth / aspectRatio).toInt().coerceAtLeast(1)
+                        attempt++
+                        val candidate = ImageUtils.getScaledImage(context, attachment.uri, midWidth, midHeight)
+                        Timber.d(
+                            "Compression attempt $attempt: ${
+                                candidate.size / 1024
+                            }/${maxBytes / 1024}Kb ($origWidth*$origHeight -> $midWidth*$midHeight)"
+                        )
+                        if (candidate.size <= maxBytes) {
+                            bestBytes = candidate
+                            lo = midWidth + 1
+                        } else {
+                            hi = midWidth - 1
+                        }
 
-                    // release the attachment hold on the image bytes so the GC can reclaim
+                        // release the attachment hold on the image bytes so the GC can reclaim
+                        attachment.releaseResourceBytes()
+                    }
+                } else {
+                    bestBytes = gifCompressor.compressGif(
+                        context,
+                        attachment,
+                        maxBytes,
+                        origWidth,
+                        aspectRatio
+                    )
                     attachment.releaseResourceBytes()
                 }
 
